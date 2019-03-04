@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "students": {
+      ".indexOn": [
+        "email",
+        "first_name",
+        "last_name"
+      ]
+    },
+    "faculty": {
+      ".indexOn": [
+        "email",
+        "first_name",
+        "last_name"
+      ]
+    },
+    "newleaves": {
+      "$studentId": {
+        ".indexOn": [
+          "last_updated_at",
+          "status"
+        ]
+      }
+    },
+    "announcements": {
+      ".indexOn": [
+        "postTimeInterval"
+      ]
+    },
+    "events": {
+      ".indexOn": [
+        "start_time"
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "gmail": {
+    "password": "Thehillismyhome19",
+    "email": "wavefirebase@gmail.com"
+  },
+  "firebase": {
+    "projectId": "wave-490b0",
+    "databaseURL": "https://wave-490b0.firebaseio.com",
+    "storageBucket": "wave-490b0.appspot.com",
+    "cloudResourceLocation": "us-central"
+  }
+}
