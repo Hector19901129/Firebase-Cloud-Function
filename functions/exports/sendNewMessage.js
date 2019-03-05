@@ -3,8 +3,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
-var receiverFcmToken;
-
 exports = module.exports = functions.https.onCall((data, context) => {
 
 	/*
@@ -20,7 +18,8 @@ exports = module.exports = functions.https.onCall((data, context) => {
 	const receiverUid = data.receiver;
 	const senderName = data.sender;
 
-    var newChatMessage = {
+	var receiverFcmToken;
+	var newChatMessage = {
 		sender : senderUid,
 		receiver : receiverUid,
 		message : data.message,

@@ -3,8 +3,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
-var allStudents, allFaculties;
-
 exports = module.exports = functions.https.onCall((data, context) => {
 
 	/*
@@ -20,11 +18,13 @@ exports = module.exports = functions.https.onCall((data, context) => {
 			count: Int,
 		}
 	*/
-	console.log('getParticipants API called', data);
+	//console.log('getParticipants API called', data);
 
 	const searchTerms = data.searchTerms;
 	const start = data.start;
 	const count = data.count;
+
+	var allStudents, allFaculties;
 
 	return filterStudents(searchTerms).then((students) => {
 		return arrangeStudentsByLastName(students);
@@ -44,6 +44,8 @@ exports = module.exports = functions.https.onCall((data, context) => {
 		return returnValue;
 	});
 });
+
+
 
 function isMatching(student, searchTerms) {
 
