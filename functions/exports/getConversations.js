@@ -17,7 +17,7 @@ var findUserPromise = (userId) => {
 	});
 }
 
-var getUserPromise = (userId) => {
+var getUserPromise = (userId, conversations) => {
 
 	return new Promise((resolve, reject) => {
 
@@ -37,12 +37,11 @@ var getUserPromise = (userId) => {
 	});
 }
 
-var conversations = [];
-
 var getConversationsPromise = (uid) => {
 
 	return new Promise((resolve, reject) => {
 
+		var conversations = [];
 		admin.database().ref('messages/' + uid).once('value', (snapshot) => {
 
 			var promises = [];
@@ -69,11 +68,11 @@ var getConversationsPromise = (uid) => {
 					unreads: count
 				});
 
-				promises.push(getUserPromise(userId));
+				promises.push(getUserPromise(userId, conversations));
 			});
 
 			return Promise.all(promises).then((result) => {
-				resolve(result);
+				resolve(conversations);
 				return '';
 			});
 		});
@@ -83,9 +82,15 @@ var getConversationsPromise = (uid) => {
 exports = module.exports = functions.https.onCall((data, context) => {
 
 	const uid = context.auth.uid;
-	conversations = [];
-
 	return getConversationsPromise(uid).then((result) => {
-		return conversations;
+		return result;
 	});
 });
+
+// exports = module.exports = functions.https.onRequest((req, res) => {
+// 	const uid = req.body.uid;
+// 	//res.send({uid: uid});
+// 	return getConversationsPromise(uid).then((result) => {
+// 		res.send(result);
+// 	});
+// });

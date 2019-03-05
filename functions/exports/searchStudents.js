@@ -36,6 +36,41 @@ exports = module.exports = functions.https.onCall((data, context) => {
 	});
 });
 
+
+
+// exports = module.exports = functions.https.onRequest((req, res1) => {
+
+// 	/*
+// 		data = {
+// 			searchTerms : {
+// 				gender,
+// 				dorm,
+// 				current_location,
+// 				grade,
+// 			},
+
+// 			start: Int,
+// 			count: Int,
+// 		}
+// 	*/
+// 	//console.log('searchStudent API called', data);
+
+// 	const searchTerms = req.body.searchTerms;
+// 	const start = req.body.start;
+// 	const count = req.body.count;
+
+// 	return filterStudents(searchTerms).then((students) => {
+// 		return arrangeStudentsByLastName(students);
+// 	}).then( (orderedStudents) => {
+// 		var res = orderedStudents.slice(start, start + count);
+// 		var returnValue = {'finished': (orderedStudents.length <= start + count),
+// 							'students': res};
+
+// 		console.log('returning', returnValue);
+// 		res1.send(returnValue);
+// 	});
+// });
+
 function isMatching(student, searchTerms) {
 
 	if(searchTerms.gender !== null && student.gender === searchTerms.gender) 
