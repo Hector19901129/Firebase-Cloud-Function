@@ -29,7 +29,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
               } else {
                   path = 'faculty/' + memberId + '/groups'
               }
-              return admin.database().ref(path).push({ id: newGroup.groupId, lastSeen: data.timestamp })
+              return admin.database().ref(`${path}/${newGroup.groupId}`).update({ id: newGroup.groupId, lastSeen: data.timestamp })
           });
 
           return Promise.all(promises)

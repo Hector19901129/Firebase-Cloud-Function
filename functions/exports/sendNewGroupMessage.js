@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 
 exports = module.exports = functions.https.onCall((data, context) => {
     const sender = context.auth.uid;
-    const { groupId, message, timestamp } = data;
+    const { groupId, message, timestamp, avatar } = data;
     const senderName = data.sender;
 
     const newGroupMessage = {sender, message, updatedAt: timestamp};
@@ -19,12 +19,12 @@ exports = module.exports = functions.https.onCall((data, context) => {
 
               return calculateUnreadCounts(groupId, memberId, lastSeen, isStudent).then((unreadCount) => {
                   return sendPushNotificationTo(fcmToken,
-                    {'id': sender, 'name': senderName, 'picture': data.avatar},
+                    {'id': sender, 'name': senderName, 'picture': avatar},
                     senderName, data.message, unreadCount, unreadCount);
               });
           });
 
-          promises.push(admin.database().ref(`groupDetail/${groupId}`).push({ updatedAt: timestamp, lastMessage: message }));
+          promises.push(admin.database().ref(`groupDetail/${groupId}`).update({ updatedAt: timestamp, lastMessage: message }));
 
           return Promise.all(promises)
       }).then((snapshot) => {
@@ -57,7 +57,7 @@ function sendPushNotificationTo(token, sender, title, body, unreads, badgeCount)
         }
     };
 
-    admin.messaging().send(message).then((response) => {
+    return admin.messaging().send(message).then((response) => {
         return {'result' : 'success'};
     }).catch((error) => {
         return {'result' : 'failed', 'error' : 'Failed to send push notification'};
@@ -77,7 +77,7 @@ const calculateUnreadCounts = (groupId, receiverId, lastSeen, isStudent) => {
 
           const userType = isStudent ? 'students/' : 'faculty/';
 
-          return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).push({ unreads: unreadCount })
+          return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).update({ unreads: unreadCount })
             .then((snapshot) => {
                 return unreadCount;
             })
