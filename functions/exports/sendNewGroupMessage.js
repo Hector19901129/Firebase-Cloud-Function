@@ -1,24 +1,85 @@
-const functions = require('firebase-functions')
-const admin = require('firebase-admin')
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 
 exports = module.exports = functions.https.onCall((data, context) => {
+    const sender = context.auth.uid;
+    const { groupId, message, timestamp } = data;
+    const senderName = data.sender;
 
-    const senderId = context.auth.uid
-    const groupId = data.groupId
+    const newGroupMessage = {sender, message, updatedAt: timestamp};
 
+    return admin.database().ref(`groupMessage/${groupId}`).push(newGroupMessage)
+      .then(_ => {
+          return admin.database().ref(`groupDetail/${groupId}`).once('value')
+      }).then((snapshot) => {
+          const { members } = snapshot.val();
 
-    var newGroupMessage = {
-        senderId: senderId,
-        message: data.message,
-        timestamp: data.timestamp,
-        isRead: false
-    }
+          let promises = Object.keys(members).map((memberId) => {
+              const { fcmToken, isStudent, lastSeen } = members[memberId];
 
-    let path = 'groupMessage/' +groupId 
+              return calculateUnreadCounts(groupId, memberId, lastSeen, isStudent).then((unreadCount) => {
+                  return sendPushNotificationTo(fcmToken,
+                    {'id': sender, 'name': senderName, 'picture': data.avatar},
+                    senderName, data.message, unreadCount, unreadCount);
+              });
+          });
 
-    return admin.database().ref(path).push(newGroupMessage).then((snapshot) => {
-        return {
-            result: 'success'
+          promises.push(admin.database().ref(`groupDetail/${groupId}`).push({ updatedAt: timestamp, lastMessage: message }));
+
+          return Promise.all(promises)
+      }).then((snapshot) => {
+          return { result: 'Success' }
+      });
+});
+
+function sendPushNotificationTo(token, sender, title, body, unreads, badgeCount) {
+    var message = {
+        token: token,
+        data: {
+            category: 'messaging',
+            senderId: sender.id,
+            senderName: sender.name,
+            senderPicture: sender.picture,
+            unreads: String(unreads),
+            badge: String(badgeCount)
+        },
+        apns: {
+            payload: {
+                aps: {
+                    alert: {
+                        title: title,
+                        body: body
+                    },
+                    badge: badgeCount,
+                    sound: 'default'
+                }
+            }
         }
-    })
-})
+    };
+
+    admin.messaging().send(message).then((response) => {
+        return {'result' : 'success'};
+    }).catch((error) => {
+        return {'result' : 'failed', 'error' : 'Failed to send push notification'};
+    });
+}
+
+const calculateUnreadCounts = (groupId, receiverId, lastSeen, isStudent) => {
+    let unreadCount = 0;
+
+    return admin.database().ref(`groupMessage/${groupId}`).once('value')
+      .then((snapshot) => {
+          snapshot.forEach((conversation) => {
+              if((new Date(conversation.val().timestamp)).getTime() > (new Date(lastSeen)).getTime()) {
+                  unreadCount++;
+              }
+          });
+
+          const userType = isStudent ? 'students/' : 'faculty/';
+
+          return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).push({ unreads: unreadCount })
+            .then((snapshot) => {
+                return unreadCount;
+            })
+      });
+};
