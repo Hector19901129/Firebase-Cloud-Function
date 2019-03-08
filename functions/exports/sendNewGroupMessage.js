@@ -3,10 +3,9 @@ const admin = require('firebase-admin');
 
 exports = module.exports = functions.https.onCall((data, context) => {
     const sender = context.auth.uid;
-    const { groupId, message, timestamp, avatar } = data;
-    const senderName = data.sender;
+    const { groupId, message, timestamp, avatar, senderName } = data;
 
-    const newGroupMessage = {sender, message, updatedAt: timestamp};
+    const newGroupMessage = {sender, message, updatedAt: timestamp, avatar, senderName };
 
     return admin.database().ref(`groupMessage/${groupId}`).push(newGroupMessage)
       .then(_ => {
