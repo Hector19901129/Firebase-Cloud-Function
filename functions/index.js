@@ -1,6 +1,7 @@
 exports.sendApprovalEmail = require('./exports/sendApprovalEmail');
 exports.sendNewMessage = require('./exports/sendNewMessage');
 exports.markConversationAsRead = require('./exports/markConversationAsRead');
+exports.markGroupConversationAsRead = require('./exports/markGroupConversationAsRead');
 exports.clearLeaves = require('./exports/clearLeaves');
 exports.searchStudents = require('./exports/searchStudents');
 exports.getParticipants = require('./exports/getParticipants');
