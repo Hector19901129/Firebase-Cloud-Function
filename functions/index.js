@@ -9,4 +9,5 @@ exports.searchStudents = require('./exports/searchStudents');
 exports.getParticipants = require('./exports/getParticipants');
 exports.getEventFeed = require('./exports/getEventFeed');
 exports.createGroup = require('./exports/createGroup');
+exports.deleteGroup = require('./exports/deleteGroup');
 exports.sendNewGroupMessage = require('./exports/sendNewGroupMessage');
