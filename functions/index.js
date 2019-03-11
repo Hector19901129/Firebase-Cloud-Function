@@ -1,7 +1,4 @@
-
 exports.sendApprovalEmail = require('./exports/sendApprovalEmail');
-
-exports.getConversations = require('./exports/getConversations');
 exports.sendNewMessage = require('./exports/sendNewMessage');
 exports.markConversationAsRead = require('./exports/markConversationAsRead');
 exports.clearLeaves = require('./exports/clearLeaves');

@@ -23,7 +23,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
               });
           });
 
-          promises.push(admin.database().ref(`groupDetail/${groupId}`).update({ updatedAt: timestamp, lastMessage: message }));
+          promises.push(admin.database().ref(`groupDetail/${groupId}`).update({ updatedAt: timestamp, lastMessage: newGroupMessage }));
 
           return Promise.all(promises)
       }).then((snapshot) => {
