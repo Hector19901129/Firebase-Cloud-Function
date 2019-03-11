@@ -5,7 +5,6 @@ exports = module.exports = functions.https.onCall((data, context) => {
     const { groupId } = data;
 
     let promises = [];
-    promises.push(admin.database().ref(`groupMessage/${groupId}`).remove());
 
     return admin.database().ref(`groupDetail/${groupId}`).once('value')
       .then((snapshot) => {
@@ -17,6 +16,9 @@ exports = module.exports = functions.https.onCall((data, context) => {
 
               promises.push(admin.database().ref(`${type}/${memberId}/groups/${groupId}`).remove());
           });
+
+          promises.push(admin.database().ref(`groupDetail/${groupId}`).remove());
+          promises.push(admin.database().ref(`groupMessage/${groupId}`).remove());
 
           return Promise.all(promises)
       })
