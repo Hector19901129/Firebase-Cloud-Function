@@ -16,7 +16,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
           let promises = Object.keys(members).map((memberId) => {
               const { fcmToken, isStudent } = members[memberId];
 
-              return calculateUnreadCounts(groupId, memberId, sender, isStudent, timestamp).then((unreadCount) => {
+              return calculateUnreadCounts(groupId, memberId, isStudent, timestamp).then((unreadCount) => {
                   return sendPushNotificationTo(fcmToken,
                     {'id': sender, 'name': senderName, 'picture': avatar},
                     senderName, data.message, unreadCount, unreadCount);
@@ -66,7 +66,7 @@ function sendPushNotificationTo(token, sender, title, body, unreads, badgeCount)
     });
 }
 
-const calculateUnreadCounts = (groupId, receiverId, senderId, isStudent, timestamp) => {
+const calculateUnreadCounts = (groupId, receiverId, isStudent, timestamp) => {
     const userType = isStudent ? 'students/' : 'faculty/';
     let lastSeen;
 
@@ -80,8 +80,11 @@ const calculateUnreadCounts = (groupId, receiverId, senderId, isStudent, timesta
 
           snapshot.forEach((conversation) => {
               const { updatedAt, sender } = conversation.val();
-              if(sender !== senderId && updatedAt > lastSeen) {
-                  unreadCount++;
+              if(updatedAt > lastSeen) {
+                unreadCount++;
+              }
+              if (receiverId === sender) {
+                unreadCount = 0;
               }
           });
           const userType = isStudent ? 'students' : 'faculty';

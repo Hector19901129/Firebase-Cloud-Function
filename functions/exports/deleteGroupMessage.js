@@ -45,7 +45,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
           const { isStudent } = members[memberId];
           const userType = isStudent ? 'students' : 'faculty';
 
-          return admin.database().ref(`${userType}/${memberId}/groups/${groupId}`).update({ updatedAt: timestamp });
+          return admin.database().ref(`${userType}/${memberId}/groups/${groupId}`).update({ random: timestamp });
         });
 
         return Promise.all(promises)
