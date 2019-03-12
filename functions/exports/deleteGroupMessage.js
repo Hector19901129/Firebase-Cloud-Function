@@ -25,14 +25,16 @@ exports = module.exports = functions.https.onCall((data, context) => {
           return true;
         }
 
-        let lastMessage;
-        snapshot.forEach((message) => {
-          const { updatedAt } = message.val();
-          if(!lastMessage || lastMessage.updatedAt < updatedAt) {
-            lastMessage = message.val();
-            lastMessage.messageId = message.key;
-          }
-        });
+        let lastMessage = null;
+        if (snapshot.val()) {
+          snapshot.forEach((message) => {
+            const { updatedAt } = message.val();
+            if (!lastMessage || lastMessage.updatedAt < updatedAt) {
+              lastMessage = message.val();
+              lastMessage.messageId = message.key;
+            }
+          });
+        }
 
         return admin.database().ref(`groupDetail/${groupId}`).update({ lastMessage, updatedAt: timestamp });
       })
@@ -42,10 +44,9 @@ exports = module.exports = functions.https.onCall((data, context) => {
         }
 
         let promises = Object.keys(members).map((memberId) => {
-          const { isStudent } = members[memberId];
-          const userType = isStudent ? 'students' : 'faculty';
+          const {isStudent} = members[memberId];
 
-          return admin.database().ref(`${userType}/${memberId}/groups/${groupId}`).update({ random: timestamp });
+          return calculateUnreadCounts(groupId, memberId, isStudent, timestamp);
         });
 
         return Promise.all(promises)
@@ -54,3 +55,32 @@ exports = module.exports = functions.https.onCall((data, context) => {
         return { result: 'Success' }
       });
 });
+
+const calculateUnreadCounts = (groupId, receiverId, isStudent, timestamp) => {
+  const userType = isStudent ? 'students/' : 'faculty/';
+  let lastSeen;
+
+  return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).once('value')
+    .then((userGroup) => {
+      lastSeen = userGroup.val().lastSeen;
+      return admin.database().ref(`groupMessage/${groupId}`).once('value')
+    })
+    .then((snapshot) => {
+      let unreadCount = 0;
+
+      snapshot.forEach((conversation) => {
+        const { updatedAt, sender } = conversation.val();
+        if(updatedAt > lastSeen) {
+          unreadCount++;
+        }
+        if (receiverId === sender) {
+          unreadCount = 0;
+        }
+      });
+      const userType = isStudent ? 'students' : 'faculty';
+      return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).update({ unreads: unreadCount, random: timestamp })
+        .then((snapshot) => {
+          return unreadCount;
+        })
+    });
+};

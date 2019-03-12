@@ -7,7 +7,16 @@ exports = module.exports = functions.https.onCall((data, context) => {
 
     let userType = isStudent ? `students` : `faculty`;
 
-    return admin.database().ref(`${userType}/${senderId}/groups/${groupId}`).update({ lastSeen: timestamp, unreads: 0 })
+    return admin.database().ref(`${userType}/${senderId}/groups/${groupId}`).once('value')
+      .then((snapshot) => {
+        if (snapshot.val()) {
+          return admin.database().ref(`${userType}/${senderId}/groups/${groupId}`).update({
+            lastSeen: timestamp,
+            unreads: 0
+          })
+        }
+        return true;
+      })
       .then((snapshot) => {
           return { result: 'Success' };
       })
