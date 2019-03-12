@@ -27,7 +27,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
 
           return Promise.all(promises)
       }).then((snapshot) => {
-          return { result: 'Success' }
+          return { result: newGroupMessage }
       });
 });
 
@@ -84,7 +84,7 @@ const calculateUnreadCounts = (groupId, receiverId, isStudent, timestamp) => {
                 unreadCount++;
               }
               if (receiverId === sender) {
-                unreadCount = 0;
+                unreadCount--;
               }
           });
           const userType = isStudent ? 'students' : 'faculty';
