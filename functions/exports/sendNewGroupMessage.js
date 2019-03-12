@@ -8,15 +8,15 @@ exports = module.exports = functions.https.onCall((data, context) => {
     const newGroupMessage = {sender, message, updatedAt: timestamp, avatar, senderName };
 
     return admin.database().ref(`groupMessage/${groupId}`).push(newGroupMessage)
-      .then(_ => {
+      .then(( { key } ) => {
+          newGroupMessage.messageId = key;
           return admin.database().ref(`groupDetail/${groupId}`).once('value')
       }).then((snapshot) => {
           const { members } = snapshot.val();
-
           let promises = Object.keys(members).map((memberId) => {
-              const { fcmToken, isStudent, lastSeen } = members[memberId];
+              const { fcmToken, isStudent } = members[memberId];
 
-              return calculateUnreadCounts(groupId, memberId, lastSeen, isStudent).then((unreadCount) => {
+              return calculateUnreadCounts(groupId, memberId, sender, isStudent, timestamp).then((unreadCount) => {
                   return sendPushNotificationTo(fcmToken,
                     {'id': sender, 'name': senderName, 'picture': avatar},
                     senderName, data.message, unreadCount, unreadCount);
@@ -32,6 +32,9 @@ exports = module.exports = functions.https.onCall((data, context) => {
 });
 
 function sendPushNotificationTo(token, sender, title, body, unreads, badgeCount) {
+    if (!token) {
+        return { 'result': 'notification is not enabled' };
+    }
     var message = {
         token: token,
         data: {
@@ -63,20 +66,26 @@ function sendPushNotificationTo(token, sender, title, body, unreads, badgeCount)
     });
 }
 
-const calculateUnreadCounts = (groupId, receiverId, lastSeen, isStudent) => {
-    let unreadCount = 0;
+const calculateUnreadCounts = (groupId, receiverId, senderId, isStudent, timestamp) => {
+    const userType = isStudent ? 'students/' : 'faculty/';
+    let lastSeen;
 
-    return admin.database().ref(`groupMessage/${groupId}`).once('value')
+    return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).once('value')
+      .then((userGroup) => {
+          lastSeen = userGroup.val().lastSeen;
+          return admin.database().ref(`groupMessage/${groupId}`).once('value')
+      })
       .then((snapshot) => {
+          let unreadCount = 0;
+
           snapshot.forEach((conversation) => {
-              if((new Date(conversation.val().timestamp)).getTime() > (new Date(lastSeen)).getTime()) {
+              const { updatedAt, sender } = conversation.val();
+              if(sender !== senderId && updatedAt > lastSeen) {
                   unreadCount++;
               }
           });
-
-          const userType = isStudent ? 'students/' : 'faculty/';
-
-          return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).update({ unreads: unreadCount })
+          const userType = isStudent ? 'students' : 'faculty';
+          return admin.database().ref(`${userType}/${receiverId}/groups/${groupId}`).update({ unreads: unreadCount, updatedAt: timestamp })
             .then((snapshot) => {
                 return unreadCount;
             })

@@ -8,4 +8,5 @@ exports.getParticipants = require('./exports/getParticipants');
 exports.getEventFeed = require('./exports/getEventFeed');
 exports.createGroup = require('./exports/createGroup');
 exports.deleteGroup = require('./exports/deleteGroup');
+exports.deleteGroupMessage = require('./exports/deleteGroupMessage');
 exports.sendNewGroupMessage = require('./exports/sendNewGroupMessage');
