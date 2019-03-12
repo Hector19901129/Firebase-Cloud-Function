@@ -30,6 +30,7 @@ exports = module.exports = functions.https.onCall((data, context) => {
           const { updatedAt } = message.val();
           if(!lastMessage || lastMessage.updatedAt < updatedAt) {
             lastMessage = message.val();
+            lastMessage.messageId = message.key;
           }
         });
 
